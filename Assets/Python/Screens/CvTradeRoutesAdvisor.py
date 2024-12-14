@@ -5,6 +5,7 @@ from CvPythonExtensions import *
 import CvUtil
 import ScreenInput
 import CvScreenEnums
+import sdToolKit
 
 
 #R&R mod, vetiarvind, trade groups - start
@@ -92,6 +93,11 @@ class CvTradeRoutesAdvisor:
 		if self.pTransport == None:
 			return
 		
+		self.player_id = gc.getGame().getActivePlayer()
+		self.player = gc.getPlayer(self.player_id)
+##		player = gc.getPlayer(gc.getGame().getActivePlayer())
+
+		
 		# City list
 		self.CityList = []
 		(city, iter) = self.player.firstCity(False)
@@ -173,7 +179,7 @@ class CvTradeRoutesAdvisor:
 
 		self.STANDARD_MARGIN = 16
 		
-		self.PANEL_WIDTH = 420
+		self.PANEL_WIDTH = 500
 		self.PANEL_X = self.XResolution - self.PANEL_WIDTH - self.STANDARD_MARGIN
 		self.PANEL_Y = 55
 		
@@ -319,15 +325,16 @@ class CvTradeRoutesAdvisor:
 		szTable = self.TableNames[self.CURRENT_TABLE]
 		
 		screen.modifyLabel(self.szTitle, u"<font=3b>" + self.TableLabel[self.CURRENT_TABLE] + u"</font>", CvUtil.FONT_LEFT_JUSTIFY)
-		screen.addTableControlGFC(szTable, 5, self.TABLE_X, self.TABLE_Y, self.TABLE_WIDTH, self.TABLE_HEIGHT, True, False, 32, 32, TableStyles.TABLE_STYLE_STANDARD)
+		screen.addTableControlGFC(szTable, 6, self.TABLE_X, self.TABLE_Y, self.TABLE_WIDTH, self.TABLE_HEIGHT, True, False, 32, 32, TableStyles.TABLE_STYLE_STANDARD)
 		screen.setStyle(szTable, "Table_StandardCiv_Style")
 		screen.enableSort(szTable)
 		screen.enableSelect(szTable, False)
 		screen.setTableColumnHeader(szTable, 0, u"id", 0)
 		screen.setTableColumnHeader(szTable, 1, u"", 32)
 		screen.setTableColumnHeader(szTable, 2, u"", 32)
-		screen.setTableColumnHeader(szTable, 3, localText.getText("TXT_KEY_TRADE_ROUTES_MAIN_TABLE_3", ()), self.TABLE_WIDTH / 2 - 41)
-		screen.setTableColumnHeader(szTable, 4, localText.getText("TXT_KEY_TRADE_ROUTES_MAIN_TABLE_4", ()), self.TABLE_WIDTH / 2 - 41)
+		screen.setTableColumnHeader(szTable, 3, localText.getText("TXT_KEY_TRADE_ROUTES_MAIN_TABLE_3", ()), self.TABLE_WIDTH / 3 - 41)
+		screen.setTableColumnHeader(szTable, 4, localText.getText("TXT_KEY_TRADE_ROUTES_MAIN_TABLE_4", ()), self.TABLE_WIDTH / 3 - 41)
+		screen.setTableColumnHeader(szTable, 5, localText.getText("TXT_KEY_TRADE_ROUTES_EXPORT_TABLE_2", ()), self.TABLE_WIDTH / 3 - 41)
 		
 		self.updateButtons()
 		
@@ -344,6 +351,23 @@ class CvTradeRoutesAdvisor:
 			screen.setTableText(szTable, 2, iI, u"<font=3>%c</font>" % gc.getYieldInfo(pRoute.getYield()).getChar(), "", WidgetTypes.WIDGET_GENERAL, -1, -1, CvUtil.FONT_CENTER_JUSTIFY)
 			screen.setTableText(szTable, 3, iI, self.getColor(pRoute) + pRoute.getSourceCityName() + u"</color>", "", WidgetTypes.WIDGET_GENERAL, -1, -1, CvUtil.FONT_LEFT_JUSTIFY)
 			screen.setTableText(szTable, 4, iI, self.getColor(pRoute) + pRoute.getDestinationCityName() + u"</color>", "", WidgetTypes.WIDGET_GENERAL, -1, -1, CvUtil.FONT_LEFT_JUSTIFY)
+
+			player = self.player
+			pCity = player.getCity(0)
+			iX = pCity.getX()
+			iY = pCity.getY()
+##			print "name: %(s)20d" % {"s":pCity.getName()}
+##			print "city x,y: %d,%d" % (iX,iY)
+			pPlot = CyMap().plot(iX, iY)
+	
+			for iDirection in range(CardinalDirectionTypes.NUM_CARDINALDIRECTION_TYPES):
+				pPathPlot = plotCardinalDirection(iX, iY, CardinalDirectionTypes(iDirection))
+				if pPathPlot != None:
+					iPathDistance = CyMap().calculatePathDistance(pPlot, pPathPlot)
+
+			strDistance = str(iPathDistance)
+
+			screen.setTableText(szTable, 5, iI, strDistance, "", WidgetTypes.WIDGET_GENERAL, -1, -1, CvUtil.FONT_CENTER_JUSTIFY)
 			
 			iI += 1
 
@@ -355,7 +379,6 @@ class CvTradeRoutesAdvisor:
 		
 		return szColor
 
-	
 	def updateRoutes(self):
 		self.ExistingRoutes = []
 		for iRoute in range(self.player.getNumTradeRoutes()):

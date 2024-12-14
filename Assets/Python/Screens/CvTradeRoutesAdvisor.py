@@ -352,6 +352,7 @@ class CvTradeRoutesAdvisor:
 			screen.setTableText(szTable, 3, iI, self.getColor(pRoute) + pRoute.getSourceCityName() + u"</color>", "", WidgetTypes.WIDGET_GENERAL, -1, -1, CvUtil.FONT_LEFT_JUSTIFY)
 			screen.setTableText(szTable, 4, iI, self.getColor(pRoute) + pRoute.getDestinationCityName() + u"</color>", "", WidgetTypes.WIDGET_GENERAL, -1, -1, CvUtil.FONT_LEFT_JUSTIFY)
 
+## 2024-12-14 - raubwuerger - Probably not possible, as not all the required information are available. I'll have to customize the interface (CyTradeRoute?).
 			player = self.player
 			pCity = player.getCity(0)
 			iX = pCity.getX()

@@ -1274,11 +1274,8 @@ void CvMap::resetPathDistance()
 
 // Super Forts begin *canal* *choke*
 int CvMap::calculatePathDistance(CvPlot *pSource, CvPlot *pDest, CvPlot *pInvalidPlot)
-//int CvMap::calculatePathDistance(CvPlot *pSource, CvPlot *pDest) -- original
 // Super Forts end
 {
-	FAStarNode* pNode;
-
 	if (pSource == NULL || pDest == NULL)
 	{
 		return -1;
@@ -1288,18 +1285,18 @@ int CvMap::calculatePathDistance(CvPlot *pSource, CvPlot *pDest, CvPlot *pInvali
 	// 1 must be added because 0 is already being used as the default value for iInfo in GeneratePath()
 	int iInvalidPlot = (pInvalidPlot == NULL) ? 0 : GC.getMap().plotNum(pInvalidPlot->getX_INLINE(), pInvalidPlot->getY_INLINE()) + 1;
 
-	if (gDLL->getFAStarIFace()->GeneratePath(&GC.getStepFinder(), pSource->getX_INLINE(), pSource->getY_INLINE(), pDest->getX_INLINE(), pDest->getY_INLINE(), false, iInvalidPlot, true))
-//  if (gDLL->getFAStarIFace()->GeneratePath(&GC.getStepFinder(), pSource->getX_INLINE(), pSource->getY_INLINE(), pDest->getX_INLINE(), pDest->getY_INLINE(), false, 0, true)) -- original
-	// Super Forts end
+	if (false == gDLL->getFAStarIFace()->GeneratePath(&GC.getStepFinder(), pSource->getX_INLINE(), pSource->getY_INLINE(), pDest->getX_INLINE(), pDest->getY_INLINE(), false, iInvalidPlot, true))
 	{
-		pNode = gDLL->getFAStarIFace()->GetLastNode(&GC.getStepFinder());
-
-		if (pNode != NULL)
-		{
-			return pNode->m_iData1;
-		}
+		return -1; // no passable path exists
 	}
 
+	FAStarNode* pNode = gDLL->getFAStarIFace()->GetLastNode(&GC.getStepFinder());
+
+	if (pNode != NULL)
+	{
+		return pNode->m_iData1;
+	}
+	
 	return -1; // no passable path exists
 }
 

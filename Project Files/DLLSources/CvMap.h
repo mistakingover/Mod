@@ -316,7 +316,6 @@ public:
 
 	void resetPathDistance();
 	// Super Forts begin *canal* *choke*
-	//int calculatePathDistance(CvPlot *pSource, CvPlot *pDest); //original
 	int calculatePathDistance(CvPlot *pSource, CvPlot *pDest, CvPlot *pInvalidPlot = NULL);	// Exposed to Python
 	void calculateCanalAndChokePoints();	// Exposed to Python
 	// Super Forts end

@@ -53,3 +53,8 @@ int CyTradeRoute::getYield() const
 {
 	return m_pTradeRoute ? m_pTradeRoute->getYield() : -1;
 }
+
+int CyTradeRoute::getDistanceBetweenCities() const
+{
+	return m_pTradeRoute ? m_pTradeRoute->getDistanceBetweenCities() : -1;
+}

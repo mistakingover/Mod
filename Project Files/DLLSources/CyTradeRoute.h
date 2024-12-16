@@ -21,6 +21,7 @@ public:
 	std::wstring getSourceCityName() const;
 	std::wstring getDestinationCityName() const;
 	int getYield() const;
+	int getDistanceBetweenCities() const;
 
 protected:
 	CvTradeRoute* m_pTradeRoute;

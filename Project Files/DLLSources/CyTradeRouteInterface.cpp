@@ -21,5 +21,6 @@ void CyTradeRoutePythonInterface()
 		.def("getDestinationCityNameKey", &CyTradeRoute::getDestinationCityNameKey, "wstring ()")
 		.def("getDestinationCityName", &CyTradeRoute::getDestinationCityName, "wstring ()")
 		.def("getYield", &CyTradeRoute::getYield, "YieldTypes ()")
-	;
+		.def("getDistanceBetweenCities", &CyTradeRoute::getDistanceBetweenCities, "int ()")
+		;
 }

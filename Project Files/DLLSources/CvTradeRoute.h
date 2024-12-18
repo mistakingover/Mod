@@ -42,7 +42,7 @@ public:
 	// Custom_House_Mod End
 
 	int getDistanceBetweenCities() const;
-
+	int getImportAmount() const;
 
 protected:
 	int m_iId;
@@ -50,7 +50,7 @@ protected:
 	IDInfo m_kDestinationCity;
 	YieldTypes m_eYield;
 
-	void setActiveDirty();
+	void setDirtyTrue();
 };
 
 

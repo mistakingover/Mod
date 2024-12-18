@@ -58,3 +58,8 @@ int CyTradeRoute::getDistanceBetweenCities() const
 {
 	return m_pTradeRoute ? m_pTradeRoute->getDistanceBetweenCities() : -1;
 }
+
+int CyTradeRoute::getImportAmount() const
+{
+	return m_pTradeRoute ? m_pTradeRoute->getImportAmount() : -1;
+}

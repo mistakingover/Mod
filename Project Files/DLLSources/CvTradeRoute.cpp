@@ -43,7 +43,7 @@ void CvTradeRoute::setSourceCity(const IDInfo& kCity)
 {
 	if (getSourceCity() != kCity)
 	{
-		setActiveDirty();
+		setDirtyTrue();
 		const IDInfo& kOldCity = getSourceCity();
 
 		m_kSourceCity = kCity;
@@ -62,7 +62,7 @@ void CvTradeRoute::setSourceCity(const IDInfo& kCity)
 			pCity->updateExport(getYield());
 		}
 
-		setActiveDirty();
+		setDirtyTrue();
 	}
 }
 
@@ -92,7 +92,7 @@ void CvTradeRoute::setDestinationCity(const IDInfo& kCity)
 {
 	if (getDestinationCity() != kCity)
 	{
-		setActiveDirty();
+		setDirtyTrue();
 		const IDInfo& kOldCity = getDestinationCity();
 
 		m_kDestinationCity = kCity;
@@ -111,7 +111,7 @@ void CvTradeRoute::setDestinationCity(const IDInfo& kCity)
 			pCity->updateImport(getYield());
 		}
 
-		setActiveDirty();
+		setDirtyTrue();
 	}
 }
 
@@ -162,7 +162,7 @@ void CvTradeRoute::setYield(YieldTypes eYield)
 			pCity->updateExport(eOldYield);
 		}
 
-		setActiveDirty();
+		setDirtyTrue();
 	}
 }
 
@@ -191,7 +191,7 @@ bool CvTradeRoute::checkValid(PlayerTypes ePlayer) const
 	return true;
 }
 
-void CvTradeRoute::setActiveDirty()
+void CvTradeRoute::setDirtyTrue()
 {
 	if (getDestinationCity().eOwner == GC.getGameINLINE().getActivePlayer())
 	{
@@ -226,6 +226,18 @@ int CvTradeRoute::getDistanceBetweenCities() const
 	}
 
 	return GC.getMap().calculatePathDistance(sourceCity->getCityIndexPlot(CITY_HOME_PLOT), destinationCity->getCityIndexPlot(CITY_HOME_PLOT));
+}
+
+int CvTradeRoute::getImportAmount() const
+{
+	CvCity* destinationCity = getCity(m_kDestinationCity);
+
+	if (NULL == destinationCity)
+	{
+		return -1;
+	}
+
+	return destinationCity->getMaxImportAmount(m_eYield);
 }
 
 // Custom_House_Mod End

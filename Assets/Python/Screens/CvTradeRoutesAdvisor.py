@@ -325,7 +325,7 @@ class CvTradeRoutesAdvisor:
 		szTable = self.TableNames[self.CURRENT_TABLE]
 		
 		screen.modifyLabel(self.szTitle, u"<font=3b>" + self.TableLabel[self.CURRENT_TABLE] + u"</font>", CvUtil.FONT_LEFT_JUSTIFY)
-		screen.addTableControlGFC(szTable, 6, self.TABLE_X, self.TABLE_Y, self.TABLE_WIDTH, self.TABLE_HEIGHT, True, False, 32, 32, TableStyles.TABLE_STYLE_STANDARD)
+		screen.addTableControlGFC(szTable, 7, self.TABLE_X, self.TABLE_Y, self.TABLE_WIDTH, self.TABLE_HEIGHT, True, False, 32, 32, TableStyles.TABLE_STYLE_STANDARD)
 		screen.setStyle(szTable, "Table_StandardCiv_Style")
 		screen.enableSort(szTable)
 		screen.enableSelect(szTable, False)
@@ -334,7 +334,8 @@ class CvTradeRoutesAdvisor:
 		screen.setTableColumnHeader(szTable, 2, u"", 32)
 		screen.setTableColumnHeader(szTable, 3, localText.getText("TXT_KEY_TRADE_ROUTES_MAIN_TABLE_3", ()), self.TABLE_WIDTH / 3 - 41)
 		screen.setTableColumnHeader(szTable, 4, localText.getText("TXT_KEY_TRADE_ROUTES_MAIN_TABLE_4", ()), self.TABLE_WIDTH / 3 - 41)
-		screen.setTableColumnHeader(szTable, 5, localText.getText("TXT_KEY_TRADE_ROUTES_MAIN_TABLE_5", ()), self.TABLE_WIDTH / 3 - 41)
+		screen.setTableColumnHeader(szTable, 5, localText.getText("TXT_KEY_TRADE_ROUTES_MAIN_TABLE_5", ()), self.TABLE_WIDTH / 4 - 41)
+		screen.setTableColumnHeader(szTable, 6, localText.getText("TXT_KEY_POPUP_IMPORT_IMPORT", ()), self.TABLE_WIDTH / 4 - 41)
 		
 		self.updateButtons()
 		
@@ -352,6 +353,7 @@ class CvTradeRoutesAdvisor:
 			screen.setTableText(szTable, 3, iI, self.getColor(pRoute) + pRoute.getSourceCityName() + u"</color>", "", WidgetTypes.WIDGET_GENERAL, -1, -1, CvUtil.FONT_LEFT_JUSTIFY)
 			screen.setTableText(szTable, 4, iI, self.getColor(pRoute) + pRoute.getDestinationCityName() + u"</color>", "", WidgetTypes.WIDGET_GENERAL, -1, -1, CvUtil.FONT_LEFT_JUSTIFY)
 			screen.setTableText(szTable, 5, iI, u"%d" % pRoute.getDistanceBetweenCities(), "", WidgetTypes.WIDGET_GENERAL, -1, -1, CvUtil.FONT_CENTER_JUSTIFY)
+			screen.setTableText(szTable, 6, iI, u"%d" % pRoute.getImportAmount(), "", WidgetTypes.WIDGET_GENERAL, -1, -1, CvUtil.FONT_CENTER_JUSTIFY)
 			
 			iI += 1
 

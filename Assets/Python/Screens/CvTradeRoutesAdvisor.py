@@ -335,7 +335,7 @@ class CvTradeRoutesAdvisor:
 		screen.setTableColumnHeader(szTable, 3, localText.getText("TXT_KEY_TRADE_ROUTES_MAIN_TABLE_3", ()), self.TABLE_WIDTH / 3 - 41)
 		screen.setTableColumnHeader(szTable, 4, localText.getText("TXT_KEY_TRADE_ROUTES_MAIN_TABLE_4", ()), self.TABLE_WIDTH / 3 - 41)
 		screen.setTableColumnHeader(szTable, 5, localText.getText("TXT_KEY_TRADE_ROUTES_MAIN_TABLE_5", ()), self.TABLE_WIDTH / 4 - 41)
-		screen.setTableColumnHeader(szTable, 6, localText.getText("TXT_KEY_POPUP_IMPORT_IMPORT", ()), self.TABLE_WIDTH / 4 - 41)
+		screen.setTableColumnHeader(szTable, 6, localText.getText("TXT_KEY_TRADE_ROUTES_MAIN_TABLE_6", ()), self.TABLE_WIDTH / 4 - 41)
 		
 		self.updateButtons()
 		

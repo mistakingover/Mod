@@ -310,6 +310,15 @@
 		<Russian>Расстояние</Russian>
 	</TEXT>
 	<TEXT>
+		<Tag>TXT_KEY_TRADE_ROUTES_MAIN_TABLE_6</Tag>
+		<English>Amount</English>
+		<French>Quantité</French>
+		<German>Menge</German>
+		<Italian>Quantità</Italian>
+		<Spanish>Cantidad</Spanish>
+		<Russian>Количество</Russian>
+	</TEXT>
+	<TEXT>
 		<Tag>TXT_KEY_TRADE_ROUTES_MISSING_YIELD</Tag>
 		<English>-</English>
 		<French>-</French>

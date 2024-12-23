@@ -69,12 +69,6 @@ public:
 	bool AI_isControlled() { return AI_isControlledInternal(); }
 	bool AI_isControlledInternal() const { return (!isHuman() || isAutomated()); }
 
-	enum UnloadMode
-	{
-		NoForce,
-		Force
-	};
-
 protected:
 
 	int m_iMissionAIX;
@@ -97,7 +91,7 @@ protected:
 private:
 	// R&R mod, vetiarvind, max yield import limit - start
 	int estimateYieldsToLoad(CvCity* pDestinationCity, int maxYieldsToLoad, YieldTypes eYield, int turnsToReach, int alreadyLoaded) const;
-	void unloadToCity(CvCity* pCity, CvUnit* unit, UnloadMode um = NoForce);
+	void unloadToCity(CvCity* pCity, CvUnit* unit);
 	// R&R mod, vetiarvind, max yield import limit - end
 
 	void processTradeRoute(CvTradeRoute* pRoute, std::map<IDInfo, int>& cityValues, std::vector<CvTradeRoute*>& routes, std::vector<int>& routeValues, std::vector<bool>& yieldsDelivered, std::vector<bool>& yieldsToUnload);

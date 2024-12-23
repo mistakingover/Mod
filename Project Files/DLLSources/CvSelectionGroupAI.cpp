@@ -33,9 +33,6 @@ CvSelectionGroupAI::~CvSelectionGroupAI()
 void CvSelectionGroupAI::AI_init()
 {
 	AI_reset();
-
-	//--------------------------------
-	// Init other game data
 }
 
 
@@ -110,11 +107,7 @@ void CvSelectionGroupAI::AI_seperateAI(UnitAITypes eUnitAI)
 		if (pLoopUnit != NULL && pLoopUnit->AI_getUnitAIType() == eUnitAI)
 		{
 			pLoopUnit->joinGroup(NULL);
-			// TAC - AI Assault Sea - koma13, jdog5000(BBAI)
-			// Was potential crash in use of plot() if group emptied
-			//if (plot()->getTeam() == getTeam())
 			if (pLoopUnit->plot()->getTeam() == getTeam())
-			// TAC - AI Assault Sea - koma13, jdog5000(BBAI)
 			{
 				pLoopUnit->getGroup()->pushMission(MISSION_SKIP);
 			}
@@ -327,19 +320,7 @@ int CvSelectionGroupAI::AI_attackOdds(const CvPlot* pPlot, bool bPotentialEnemy)
 
 	FAssert(getOwnerINLINE() != NO_PLAYER);
 
-	/************************************************************************************************/
-	/* BETTER_BTS_AI_MOD                      02/21/10                                jdog5000      */
-	/*                                                                                              */
-	/* Efficiency, Lead From Behind                                                                 */
-	/************************************************************************************************/
-	// From Lead From Behind by UncutDragon
-	// original
-	//if (pPlot->getBestDefender(NO_PLAYER, getOwnerINLINE(), NULL, !bPotentialEnemy, bPotentialEnemy) == NULL)
-	// modified
 	if (!pPlot->hasDefender(false, NO_PLAYER, getOwnerINLINE(), NULL, !bPotentialEnemy, bPotentialEnemy))
-		/************************************************************************************************/
-		/* BETTER_BTS_AI_MOD                       END                                                  */
-		/************************************************************************************************/
 	{
 		return 100;
 	}
@@ -789,36 +770,10 @@ bool CvSelectionGroupAI::AI_launchAssault(CvPlot* pTargetCityPlot)
         pLoopUnit = units_it->second;
 		if (pLoopUnit->canMove() && pLoopUnit->canAttack())
 		{
-//			if (pLoopUnit->AI_attackFromTransport(NULL, 40, 80))
-//			{
-//			    bAction = true;
-//			}
             int iPriority = 41;
             pLoopUnit->AI_setMovePriority(iPriority);
 		}
     }
-//    for (units_it = units.begin(); units_it != units.end(); ++units_it)
-//    {
-//        pLoopUnit = units_it->second;
-//        if (pLoopUnit->canMove())
-//        {
-//            if (pLoopUnit->AI_moveFromTransport(NULL))
-//            {
-//                bAction = true;
-//            }
-//        }
-//    }
-//    for (units_it = units.begin(); units_it != units.end(); ++units_it)
-//    {
-//        pLoopUnit = units_it->second;
-//		if (pLoopUnit->canMove() && pLoopUnit->canAttack())
-//		{
-//			if (pLoopUnit->AI_attackFromTransport(NULL, 0, 100))
-//			{
-//			    bAction = true;
-//			}
-//		}
-//    }
     if (bAction)
     {
 	    //pushMission(MISSION_SKIP);
@@ -1062,8 +1017,7 @@ bool CvSelectionGroupAI::AI_tradeRoutes()
 		for (uint i = 0; i < units.size(); ++i)
 		{
 			// R&R mod, vetiarvind, max yield import limit - start
-			//units[i]->unload();
-			unloadToCity(pPlotCity, units[i], UnloadMode::Force);
+			unloadToCity(pPlotCity, units[i]);
 			// R&R mod, vetiarvind, max yield import limit - end
 		}
 
@@ -1129,7 +1083,6 @@ bool CvSelectionGroupAI::AI_tradeRoutes()
 			YieldTypes eYield = routes[i]->getYield();
 
 			// transport feeder - start - Nightinggale
-			//int iAmount = pSourceCity->getYieldStored(eYield) - pSourceCity->getMaintainLevel(eYield);
 			int iAmount = pSourceCity->getYieldStored(eYield) - pSourceCity->getAutoMaintainThreshold(eYield);
 			// transport feeder - end - Nightinggale
 			// R&R mod, vetiarvind, max yield import limit - start
@@ -1140,8 +1093,10 @@ bool CvSelectionGroupAI::AI_tradeRoutes()
 				const bool bDestOk = generatePath(pSourceCity->plot(), pDestinationCity->plot(), (bIgnoreDanger ? MOVE_IGNORE_DANGER : MOVE_NO_ENEMY_TERRITORY), true, &turnsToReachFromSourceToDest);
 
 				if (!(bSourceOk && bDestOk))
+				{
 					// We require both of these paths to be valid. If not, we skip this route
 					continue;
+				}
 
 				// At least one destination is reachable
 				bNoRoute = false;
@@ -1221,7 +1176,6 @@ bool CvSelectionGroupAI::AI_tradeRoutes()
 			{
 				FAssert(!atPlot(pCity->plot()));
 				// TAC - Trade Routes Advisor - koma13 - START
-				//if (generatePath(plot(), pCity->plot(), MOVE_NO_ENEMY_TERRITORY, true))
 
 				CvPlot* pDestinationCityPlot = pCity->plot();
 
@@ -1304,7 +1258,6 @@ bool CvSelectionGroupAI::AI_tradeRoutes()
 					YieldTypes eYield = routes[i]->getYield();
 
 					// transport feeder - start - Nightinggale
-					//int iAmount = pSourceCity->getYieldStored(eYield) - pSourceCity->getMaintainLevel(eYield);
 					int iAmount = pSourceCity->getYieldStored(eYield) - pSourceCity->getAutoMaintainThreshold(eYield);
 					// transport feeder - end - Nightinggale
 
@@ -1341,7 +1294,7 @@ bool CvSelectionGroupAI::AI_tradeRoutes()
 						}
 					}
 				}
-			} //end of for loop of routes
+			}
 
 			if (iBestRouteValue > 0)
 			{
@@ -1355,12 +1308,15 @@ bool CvSelectionGroupAI::AI_tradeRoutes()
 					{
 						if (pLoopUnit->canLoadYield(plot(), routes[iBestRoute]->getYield(), false) ) 			// R&R mod, vetiarvind, max yield import limit fix
 						{
-							//pLoopUnit->loadYield(routes[iBestRoute]->getYield(), false);
 							int loaded = 0;
-							if(bImportLimitUsed)
+							if (bImportLimitUsed)
+							{
 								loaded = pLoopUnit->loadYieldAmount(routes[iBestRoute]->getYield(), iBestRouteYieldAmount, false);
+							}
 							else
+							{
 								loaded = pLoopUnit->loadYield(routes[iBestRoute]->getYield(), false);
+							}
 
 							// R&R mod, vetiarvind, max yield import limit - end
 							aiYieldsLoaded[routes[iBestRoute]->getYield()] += loaded;
@@ -1374,7 +1330,6 @@ bool CvSelectionGroupAI::AI_tradeRoutes()
 				break;
 			}
 		}
-		//XXX fill hold.
 	}
 
 	if ((kBestDestination.eOwner == NO_PLAYER) && hasCargo())
@@ -1404,7 +1359,6 @@ bool CvSelectionGroupAI::AI_tradeRoutes()
 		{
 			FAssert(!atPlot(pBestDestinationCity->plot()));
 			// TAC - Trade Routes Advisor - koma13 - START
-			//pushMission(MISSION_MOVE_TO, pBestDestinationCity->getX_INLINE(), pBestDestinationCity->getY_INLINE(), MOVE_NO_ENEMY_TERRITORY, false, false, MISSIONAI_TRANSPORT, pBestDestinationCity->plot());
 			pushMission(MISSION_MOVE_TO, pBestDestinationCity->getX_INLINE(), pBestDestinationCity->getY_INLINE(), (bIgnoreDanger ? MOVE_IGNORE_DANGER : MOVE_NO_ENEMY_TERRITORY), false, false, MISSIONAI_TRANSPORT, pBestDestinationCity->plot());
 			// TAC - Trade Routes Advisor - koma13 - END
 			if (atPlot(pBestDestinationCity->plot()))
@@ -1435,7 +1389,6 @@ bool CvSelectionGroupAI::AI_tradeRoutes()
 				{
 					// R&R mod, vetiarvind, max yield import limit - start
 					unloadToCity(pBestDestinationCity, units[i]);
-					//units[i]->unload();
 					// R&R mod, vetiarvind, max yield import limit - end
 				}
 			}
@@ -1501,7 +1454,6 @@ CvUnit* CvSelectionGroupAI::AI_ejectBestDefender(CvPlot* pDefendPlot)
 }
 
 
-// Protected Functions...
 
 // R&R mod, vetiarvind, max yield import limit - start
 bool CvSelectionGroupAI::getIgnoreDangerStatus() const
@@ -1527,12 +1479,12 @@ bool CvSelectionGroupAI::getIgnoreDangerStatus() const
 }
 
 
-// R&R mod, vetiarvind, max yield import limit - end
-// Private Functions...
-// R&R mod, vetiarvind, max yield import limit - start
 int CvSelectionGroupAI::estimateYieldsToLoad(CvCity* pDestinationCity, int maxYieldsToLoad, YieldTypes eYield, int turnsToReach, int alreadyLoaded) const
 {
-	if(maxYieldsToLoad <= 0) return 0; // R&R mod, vetiarvind, max yield import limit fix
+	if (maxYieldsToLoad <= 0)
+	{
+		return 0; // R&R mod, vetiarvind, max yield import limit fix
+	}
 	int yieldsToLoad = maxYieldsToLoad;
 
 	int importLimit = pDestinationCity->getMaxImportAmount(eYield);
@@ -1546,21 +1498,18 @@ int CvSelectionGroupAI::estimateYieldsToLoad(CvCity* pDestinationCity, int maxYi
 	return yieldsToLoad;
 }
 
-void CvSelectionGroupAI::unloadToCity(CvCity* pCity, CvUnit* unit, UnloadMode um)
+//TODO: 2024-12-23 - JHA - Implement fall-back if not all yields are unloaded
+bool CvSelectionGroupAI::unloadToCity(CvCity* pCity, CvUnit* unit)
 {
-		if (um == UnloadMode::NoForce && pCity->getMaxImportAmount(unit->getYield()) > 0)
-		{
-			int totalStored = unit->getYieldStored();
-			int toUnload = estimateYieldsToLoad(pCity, totalStored, unit->getYield(), 0, 0);
-			if(toUnload <= 0)
-				return;
-			if(toUnload < totalStored)
-				unit->unloadStoredAmount(toUnload);
-			else
-				unit->unload();
-		}
-		else
-			unit->unload();
+	unit->unloadStoredAmount(pCity->getMaxImportAmount(unit->getYield()));
+
+	if (unit->getYieldStored() > 0)
+	{
+		FAssert(unit->getYieldStored() > 0);
+		return false;
+	}
+
+	return true;
 }
 
 // R&R mod, vetiarvind, max yield import limit - end

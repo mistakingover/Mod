@@ -1199,11 +1199,16 @@ int pathCost(FAStarNode* parent, FAStarNode* node, int data, const void* pointer
 			iWorstMovesLeft = std::min(iWorstMovesLeft, iMovesLeft);
 			//iWorstMaxMoves = std::min(iWorstMaxMoves, iMaxMoves);
 
-#if GLOBAL_DEFINE_USE_CLASSIC_MOVEMENT_SYSTEM == 1
-			int iCost = PATH_MOVEMENT_WEIGHT * (iMovesLeft == 0 ? iMoveCost : iMoveCost);
-#else
-			int iCost = PATH_MOVEMENT_WEIGHT * iMoveCost;
-#endif
+			int iCost;
+			if (USE_CLASSIC_MOVEMENT_SYSTEM)
+			{
+				iCost = PATH_MOVEMENT_WEIGHT * (iMovesLeft == 0 ? iMoveCost : iMoveCost);
+			}
+			else
+			{
+				iCost = PATH_MOVEMENT_WEIGHT * iMoveCost;
+			}
+
 			iCost = (iCost * iExploreModifier) / 3;
 			//iCost = (iCost * iFlipModifier) / iFlipModifierDiv; // advc.035
 			if (iCost > iWorstCost)
@@ -1665,7 +1670,7 @@ int pathAdd(FAStarNode* parent, FAStarNode* node, int data, const void* pointer,
 		// K-Mod. I've moved the code from here into separate functions.
 		iMoves = bMoveMaxMoves ? pSelectionGroup->maxMoves() : pSelectionGroup->movesLeft();
 
-		if (GLOBAL_DEFINE_USE_CLASSIC_MOVEMENT_SYSTEM == 0)
+		if (!USE_CLASSIC_MOVEMENT_SYSTEM)
 		{
 			while (iMoves <= 0)
 			{
@@ -1695,7 +1700,7 @@ int pathAdd(FAStarNode* parent, FAStarNode* node, int data, const void* pointer,
 		// K-Mod. The original code would give incorrect results for groups where one unit had more moves but also had higher move cost.
 		// (eg. the most obvious example is when a group with 1-move units and 2-move units is moving on a railroad. - In this situation,
 		//  the original code would consistently underestimate the remaining moves at every step.)
-		if (GLOBAL_DEFINE_USE_CLASSIC_MOVEMENT_SYSTEM == 1)
+		if (USE_CLASSIC_MOVEMENT_SYSTEM)
 		{
 			const bool bNewTurn = iMoves == 0;
 
@@ -1737,7 +1742,7 @@ int pathAdd(FAStarNode* parent, FAStarNode* node, int data, const void* pointer,
 		if (bUniformCost)
 		{
 			// the simple, normal case
-			if (GLOBAL_DEFINE_USE_CLASSIC_MOVEMENT_SYSTEM == 1)
+			if (USE_CLASSIC_MOVEMENT_SYSTEM)
 			{
 				iMoves = std::max(0, iMoves - iMoveCost);
 			}
@@ -1779,7 +1784,7 @@ int pathAdd(FAStarNode* parent, FAStarNode* node, int data, const void* pointer,
 						false*/); // advc.001i
 					FAssert(iUnitMoves > 0 || i == 1);
 				}
-				if (GLOBAL_DEFINE_USE_CLASSIC_MOVEMENT_SYSTEM == 1)
+				if (USE_CLASSIC_MOVEMENT_SYSTEM)
 				{
 					iUnitMoves = std::max(iUnitMoves, 0);
 				}
@@ -1789,7 +1794,7 @@ int pathAdd(FAStarNode* parent, FAStarNode* node, int data, const void* pointer,
 		// K-Mod end
 	}
 
-	if (GLOBAL_DEFINE_USE_CLASSIC_MOVEMENT_SYSTEM == 1)
+	if (USE_CLASSIC_MOVEMENT_SYSTEM)
 	{
 		FAssertMsg(iMoves >= 0, "iMoves is expected to be non-negative (invalid Index)");
 	}

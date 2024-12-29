@@ -6363,7 +6363,7 @@ bool CvUnitAI::AI_europeBuyNativeYields()
 		YieldTypes eLoopYield = (YieldTypes)yields[i];
 		if (kOwner.isYieldEuropeTradable(eLoopYield))
 		{
-			int iAmount = getLoadYieldAmount(eLoopYield);
+			int iAmount = getYieldAmount(eLoopYield);
 			int iPrice = iAmount * kPlayerEurope.getYieldSellPrice(eLoopYield);
 
 			int iAvailableGold = kOwner.getGold() - 50;
@@ -6440,7 +6440,7 @@ bool CvUnitAI::AI_europeBuyYields()
 			YieldTypes eLoopYield = (YieldTypes)yieldRandomizer[iYield];
 			if (aiYields[eLoopYield] > 0)
 			{
-				int iMax = getLoadYieldAmount(eLoopYield);
+				int iMax = getYieldAmount(eLoopYield);
 				int iMin = std::min(iMax, aiYields[eLoopYield]);
 
 
@@ -7086,13 +7086,13 @@ bool CvUnitAI::AI_collectGoods()
 			if (kOwner.AI_isYieldForSale(eYield))
 			{
 				YieldTypes eYield = (YieldTypes)i;
-				int iYieldStored = getLoadedYieldAmount(eYield) % GC.getGameINLINE().getCargoYieldCapacity();
+				int iYieldStored = getYieldAmountAllUnitsOnPlot(eYield) % GC.getGameINLINE().getCargoYieldCapacity();
 
 				if (iYieldStored > 0)
 				{
 					if (pCity->getYieldStored(eYield) > 0)
 					{
-						loadYield(eYield, false);
+						loadYieldAmountMax(eYield, false);
 						bLoaded = true;
 					}
 				}
@@ -7132,7 +7132,7 @@ bool CvUnitAI::AI_collectGoods()
 			break;
 		}
 
-		loadYield(eBestYield, false);
+		loadYieldAmountMax(eBestYield, false);
 		bLoaded = true;
 	}
 
@@ -19150,7 +19150,7 @@ bool CvUnitAI::AI_loadAdjacent(CvPlot* pPlot, bool bTestCity)
 			CvPlot* pLoopPlot = plotDirection(pPlot->getX_INLINE(), pPlot->getY_INLINE(), ((DirectionTypes)iI));
 			if (pLoopPlot != NULL)
 			{
-				if (canLoad(pLoopPlot, bTestCity))
+				if (canLoadAnyUnit(pLoopPlot, bTestCity))
 				{
 					getGroup()->pushMission(MISSION_MOVE_TO, pPlot->getX_INLINE(), pPlot->getY_INLINE());
 					return true;

@@ -105,9 +105,9 @@ bool CyUnit::canLoadUnit(CyUnit* pUnit, CyPlot* pPlot, bool bCheckCity)
 {
 	return m_pUnit ? m_pUnit->canLoadUnit(pUnit->getUnit(), pPlot->getPlot(), bCheckCity) : false;
 }
-bool CyUnit::canLoad(CyPlot* pPlot, bool bCheckCity)
+bool CyUnit::canLoadAnyUnit(CyPlot* pPlot, bool bCheckCity)
 {
-	return m_pUnit ? m_pUnit->canLoad(pPlot->getPlot(), bCheckCity) : false;
+	return m_pUnit ? m_pUnit->canLoadAnyUnit(pPlot->getPlot(), bCheckCity) : false;
 }
 void CyUnit::load(bool bCheckCity)
 {

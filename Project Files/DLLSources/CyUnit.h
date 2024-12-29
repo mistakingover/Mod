@@ -40,7 +40,7 @@ public:
 	bool canScrap();
 	bool canGift(bool bTestVisible);
 	bool canLoadUnit(CyUnit* pUnit, CyPlot* pPlot, bool bCheckCity);
-	bool canLoad(CyPlot* pPlot, bool bCheckCity);
+	bool canLoadAnyUnit(CyPlot* pPlot, bool bCheckCity);
 	void load(bool bCheckCity);
 	bool canUnload();
 	bool canUnloadAll();

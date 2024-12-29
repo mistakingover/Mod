@@ -4484,7 +4484,7 @@ void CvDLLWidgetData::doMoveCargoToTransport(const CvWidgetDataStruct& destinati
 			}
 			else
 			{
-				int iAmount = pUnit->getLoadYieldAmount((YieldTypes) sourceWidgetData.m_iData1);
+				int iAmount = pUnit->getYieldAmount((YieldTypes) sourceWidgetData.m_iData1);
 				if (iAmount > 0)
 				{
 					gDLL->sendPlayerAction(GC.getGameINLINE().getActivePlayer(), PLAYER_ACTION_BUY_YIELD_UNIT, sourceWidgetData.m_iData1, iAmount, destinationWidgetData.m_iData1);
@@ -4513,7 +4513,7 @@ void CvDLLWidgetData::doMoveCargoToTransport(const CvWidgetDataStruct& destinati
 			}
 			else
 			{
-				int iAmount = pUnit->getLoadYieldAmount((YieldTypes) sourceWidgetData.m_iData1);
+				int iAmount = pUnit->getYieldAmount((YieldTypes) sourceWidgetData.m_iData1);
 				if (iAmount > 0)
 				{
 					gDLL->sendPlayerAction(GC.getGameINLINE().getActivePlayer(), PLAYER_ACTION_BUY_YIELD_UNIT_AFRICA, sourceWidgetData.m_iData1, iAmount, destinationWidgetData.m_iData1);
@@ -4541,7 +4541,7 @@ void CvDLLWidgetData::doMoveCargoToTransport(const CvWidgetDataStruct& destinati
 			}
 			else
 			{
-				int iAmount = pUnit->getLoadYieldAmount((YieldTypes) sourceWidgetData.m_iData1);
+				int iAmount = pUnit->getYieldAmount((YieldTypes) sourceWidgetData.m_iData1);
 				if (iAmount > 0)
 				{
 					gDLL->sendPlayerAction(GC.getGameINLINE().getActivePlayer(), PLAYER_ACTION_BUY_YIELD_UNIT_PORT_ROYAL, sourceWidgetData.m_iData1, iAmount, destinationWidgetData.m_iData1);

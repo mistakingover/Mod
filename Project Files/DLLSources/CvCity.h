@@ -629,6 +629,7 @@ public:
 	CvUnit* getBestDefender(ProfessionTypes* peProfession, CvUnit* pCurrentBest, const CvUnit* pAttacker) const;
 
 	bool canTradeAway(PlayerTypes eToPlayer) const;
+	bool getStockOverflow() const;
 
 	void resetSavedData(int iID, PlayerTypes eOwner, int iX, int iY, bool bConstructorCall);
 	void resetSavedData(int iID, PlayerTypes eOwner, Coordinates resetCoord, bool bConstructorCall);

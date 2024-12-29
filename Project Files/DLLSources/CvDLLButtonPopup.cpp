@@ -2456,7 +2456,7 @@ bool CvDLLButtonPopup::launchLoadCargoPopup(CvPopup* pPopup, CvPopupInfo &info)
 						CvUnit* pLoopUnit = pSelectionGroup->getUnitAt(i);
 						if (pLoopUnit != NULL)
 						{
-							iYieldAmountAvailable = pLoopUnit->getLoadYieldAmount(eYield);
+							iYieldAmountAvailable = pLoopUnit->getYieldAmount(eYield);
 							if (iYieldAmountAvailable > 0)
 							{
 								break;

@@ -124,6 +124,8 @@ void CvUnit::init(int iID, UnitTypes eUnit, ProfessionTypes eProfession, UnitAIT
 	// Init saved data
 	reset(iID, eUnit, eOwner);
 
+	//TODO: 2024-12-25 - JHA - Remove after bug has been fixed
+	bool bIsHuman = isHuman();
 	m_iYieldStored = iYieldStored;
 	m_eFacingDirection = eFacingDirection;
 	if(m_eFacingDirection == NO_DIRECTION)
@@ -2509,7 +2511,7 @@ bool CvUnit::canDoCommand(CommandTypes eCommand, int iData1, int iData2, bool bT
 		break;
 
 	case COMMAND_LOAD:
-		if (canLoad(plot(), true))
+		if (canLoadAnyUnit(plot(), true))
 		{
 			return true;
 		}
@@ -2866,7 +2868,7 @@ void CvUnit::doCommand(CommandTypes eCommand, int iData1, int iData2)
 				}
 				else
 				{
-					loadYield((YieldTypes) iData1, false);
+					loadYieldAmountMax((YieldTypes) iData1, false);
 				}
 			}
 			break;
@@ -3382,14 +3384,14 @@ bool CvUnit::canMoveInto(CvPlot const& kPlot, bool bAttack, bool bDeclareWar, bo
 				// TODO: Maybe create a new XML tag "bAllowLargeRiverMovement in XML of Terrain Features instead - might be cleaner
 				bLandUnitMayPassLargeRiverDueToTerrainFeature = (kPlot.getFeatureType() != NO_FEATURE && GC.getFeatureInfo(kPlot.getFeatureType()).isTerrain(TERRAIN_LARGE_RIVERS) && GC.getFeatureInfo(kPlot.getFeatureType()).isNoImprovement());
 				bLandUnitMayPassLargeRiverDueToProfession = (getProfession() != NO_PROFESSION && GC.getProfessionInfo(getProfession()).isCanCrossLargeRivers());
-				bLandUnitMayBeLoaded = canLoad(&kPlot, false);
+				bLandUnitMayBeLoaded = canLoadAnyUnit(&kPlot, false);
 			}
 
 			// stop large ships from entering Large Rivers in own Terrain
 			// if (DOMAIN_SEA != getDomainType() || ePlotTeam != getTeam()) // sea units can enter impassable in own cultural borders
 			if (DOMAIN_SEA != getDomainType() || ePlotTeam != getTeam() || kPlot.getTerrainType() == TERRAIN_LARGE_RIVERS || kPlot.getTerrainType() == TERRAIN_LAKE || kPlot.getTerrainType() == TERRAIN_ICE_LAKE || kPlot.getTerrainType() == TERRAIN_SHALLOW_COAST)
 			{
-				if (bIgnoreLoad || !canLoad(&kPlot, true))
+				if (bIgnoreLoad || !canLoadAnyUnit(&kPlot, true))
 				{
 					if (bLandUnitMayPassLargeRiverDueToImprovement == false && bLandUnitMayPassLargeRiverDueToTerrainFeature == false && bLandUnitMayPassLargeRiverDueToProfession == false && bLandUnitMayBeLoaded == false)
 					{
@@ -3673,7 +3675,7 @@ bool CvUnit::canMoveInto(CvPlot const& kPlot, bool bAttack, bool bDeclareWar, bo
 
 		if (kPlot.isWater() && !m_pUnitInfo->isCanMoveAllTerrain())
 		{
-			if (bIgnoreLoad || plot()->isWater() || !canLoad(&kPlot, false))
+			if (bIgnoreLoad || plot()->isWater() || !canLoadAnyUnit(&kPlot, false))
 			{
 				//WTP, ray, Large Rivers - START
 				// allowing all Land Units to enter Large Rivers
@@ -4462,7 +4464,7 @@ bool CvUnit::canLoadUnit(const CvUnit* pTransport, const CvPlot* pPlot, bool bCh
 	}
 
 	// check if the unit is trying to flee a city with unrest
-	if (!canLeaveCity())
+	if (false == canLeaveCity())
 	{
 		return false;
 	}
@@ -4480,6 +4482,33 @@ void CvUnit::loadUnit(CvUnit* pTransport)
 
 	setTransportUnit(pTransport);
 }
+
+bool CvUnit::canLoadAnyUnit(const CvPlot* pPlot, bool bCheckCity) const
+{
+	PROFILE_FUNC();
+
+	FAssert(pPlot != NULL);
+
+	CLLNode<IDInfo>* pUnitNode = pPlot->headUnitNode();
+	while (pUnitNode != NULL)
+	{
+		CvUnit* pLoopUnit = pPlot->getUnitNodeLoop(pUnitNode);
+		if (pLoopUnit == NULL)
+		{
+			continue;
+		}
+
+		if ( false == canLoadUnit(pLoopUnit, pPlot, bCheckCity))
+		{
+			continue;
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
 
 bool CvUnit::shouldLoadOnMove(const CvPlot* pPlot) const
 {
@@ -4538,7 +4567,7 @@ bool CvUnit::shouldLoadOnMove(const CvPlot* pPlot) const
 	return false;
 }
 
-int CvUnit::getLoadedYieldAmount(YieldTypes eYield) const
+int CvUnit::getYieldAmountAllUnitsOnPlot(YieldTypes eYield) const
 {
 	CvPlot* pPlot = plot();
 	if (pPlot == NULL)
@@ -4551,22 +4580,27 @@ int CvUnit::getLoadedYieldAmount(YieldTypes eYield) const
 	for (int i=0;i<pPlot->getNumUnits();i++)
 	{
 		CvUnit* pLoopUnit = pPlot->getUnitByIndex(i);
-		if(pLoopUnit != NULL)
+		if (pLoopUnit == NULL)
 		{
-			if(pLoopUnit->getTransportUnit() == this)
-			{
-				if(pLoopUnit->getYield() == eYield)
-				{
-					iTotal += pLoopUnit->getYieldStored();
-				}
-			}
+			continue;
+		}
+
+		if (pLoopUnit->getTransportUnit() != this)
+		{
+			continue;
+		}
+
+		if(pLoopUnit->getYield() == eYield)
+		{
+			int yieldStored = pLoopUnit->getYieldStored();
+			iTotal += pLoopUnit->getYieldStored();
 		}
 	}
 
 	return iTotal;
 }
 
-int CvUnit::getLoadYieldAmount(YieldTypes eYield) const
+int CvUnit::getYieldAmount(YieldTypes eYield) const
 {
 	CvPlot* pPlot = plot();
 	if (pPlot == NULL)
@@ -4600,7 +4634,9 @@ int CvUnit::getLoadYieldAmount(YieldTypes eYield) const
 
 	if (!bFull)
 	{
-		return GC.getGameINLINE().getCargoYieldCapacity();
+//TODO: 2024-12-25 - JHA - Remove after bug has been fixed
+		int amount = GC.getGameINLINE().getCargoYieldCapacity();
+		return amount;
 	}
 
 	//check if room in other cargo
@@ -4642,12 +4678,6 @@ bool CvUnit::canLoadYields(const CvPlot* pPlot, bool bTrade) const
 
 bool CvUnit::canLoadYield(const CvPlot* pPlot, YieldTypes eYield, bool bTrade) const
 {
-	//TAC Whaling, ray
-	//if (getUnitInfo().isGatherBoat())
-	//{
-	//	return false;
-	//}
-	//End TAC Whaling, ray
 	if (eYield == NO_YIELD)
 	{
 		FAssert(!bTrade);
@@ -4656,53 +4686,53 @@ bool CvUnit::canLoadYield(const CvPlot* pPlot, YieldTypes eYield, bool bTrade) c
 
 	CvYieldInfo& kYield = GC.getYieldInfo(eYield);
 
-	if (kYield.isCargo() && !isCargo())
+	if (false == kYield.isCargo())
 	{
-		if (pPlot != NULL)
-		{
-			CvCity* pCity = pPlot->getPlotCity();
-			if (NULL != pCity)
-			{
-				if(GET_PLAYER(getOwnerINLINE()).canLoadYield(pCity->getOwnerINLINE()) || bTrade)
-				{
-					if (kYield.isCargo())
-					{
-						if (pCity->getYieldStored(eYield) > 0)
-						{
-							if (getLoadYieldAmount(eYield) > 0)
-							{
-								return true;
-							}
-						}
-					}
-				}
-			}
-		}
+		return false;
 	}
 
-	return false;
+	if (true == isCargo())
+	{
+		return false;
+	}
+
+	if (pPlot == NULL)
+	{
+		return false;
+	}
+
+	CvCity* pCity = pPlot->getPlotCity();
+	if (NULL == pCity)
+	{
+		return false;
+	}
+
+	if (false == GET_PLAYER(getOwnerINLINE()).canLoadYield(pCity->getOwnerINLINE()) && false == bTrade)
+	{
+		return false;
+	}
+
+	if (pCity->getYieldStored(eYield) <= 0)
+	{
+		return false;
+	}
+
+	return getYieldAmount(eYield) > 0;
 }
 
 //R&R mod, vetiarvind, max yield import limit - start
-//void CvUnit::loadYield(YieldTypes eYield, bool bTrade)
-int CvUnit::loadYield(YieldTypes eYield, bool bTrade)
+int CvUnit::loadYieldAmountMax(YieldTypes eYield, bool bTrade)
 {
-	/*if (!canLoadYield(plot(), eYield, bTrade))
-	{
-		return 0;
-	}*/
-
-
 	return loadYieldAmount(eYield, getMaxLoadYieldAmount(eYield), bTrade);
-	//loadYieldAmount(eYield, getMaxLoadYieldAmount(eYield), bTrade);
 //R&R mod, vetiarvind, max yield import limit - end
 }
 
 ////R&R mod, vetiarvind, max yield import limit - start
-//void CvUnit::loadYieldAmount(YieldTypes eYield, int iAmount, bool bTrade)
 int CvUnit::loadYieldAmount(YieldTypes eYield, int iAmount, bool bTrade)
 ////R&R mod, vetiarvind, max yield import limit - end
 {
+//TODO: 2024-12-25 - JHA - Remove after bug has been fixed
+	bool bIsHuman = isHuman();
 	if (!canLoadYield(plot(), eYield, bTrade))
 	{
 		return 0;
@@ -4728,7 +4758,7 @@ int CvUnit::loadYieldAmount(YieldTypes eYield, int iAmount, bool bTrade)
 int CvUnit::getMaxLoadYieldAmount(YieldTypes eYield) const
 {
 	int iMaxAmount = GC.getGameINLINE().getCargoYieldCapacity();
-	iMaxAmount = std::min(iMaxAmount, getLoadYieldAmount(eYield));
+	iMaxAmount = std::min(iMaxAmount, getYieldAmount(eYield));
 	CvCity* pCity = plot()->getPlotCity();
 	if (pCity != NULL)
 	{
@@ -4823,7 +4853,7 @@ bool CvUnit::canTradeYield(const CvPlot* pPlot) const
 	{
 		for (YieldTypes eYield = FIRST_YIELD; eYield < NUM_YIELD_TYPES; ++eYield)
 		{
-			if ((pCity->getYieldStored(eYield) > 0) && (getLoadYieldAmount(eYield) > 0))
+			if ((pCity->getYieldStored(eYield) > 0) && (getYieldAmount(eYield) > 0))
 			{
 				bYieldFound = true;
 				break;
@@ -5311,27 +5341,6 @@ void CvUnit::sailToPortRoyal(UnitTravelStates eNewState)
 }
 // R&R, ray, Port Royal - END
 
-bool CvUnit::canLoad(const CvPlot* pPlot, bool bCheckCity) const
-{
-	PROFILE_FUNC();
-
-	FAssert(pPlot != NULL);
-
-	CLLNode<IDInfo>* pUnitNode = pPlot->headUnitNode();
-	while (pUnitNode != NULL)
-	{
-		CvUnit* pLoopUnit = pPlot->getUnitNodeLoop(pUnitNode);
-
-		if (pLoopUnit != NULL && canLoadUnit(pLoopUnit, pPlot, bCheckCity))
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
-
 bool CvUnit::load(bool bCheckCity)
 {
 	CLLNode<IDInfo>* pUnitNode;
@@ -5339,7 +5348,7 @@ bool CvUnit::load(bool bCheckCity)
 	CvPlot* pPlot;
 	int iPass;
 
-	if (!canLoad(plot(), bCheckCity))
+	if (!canLoadAnyUnit(plot(), bCheckCity))
 	{
 		return true;
 	}
@@ -5387,7 +5396,7 @@ bool CvUnit::canUnload() const
 		return false;
 	}
 
-	if (!plot()->isValidDomainForLocation(*this))
+	if ( false == plot()->isValidDomainForLocation(*this))
 	{
 		return false;
 	}
@@ -5403,6 +5412,8 @@ bool CvUnit::canUnload() const
 		}
 	}
 
+//TODO: 2024-12-25 - JHA - Remove after bug has been fixed
+	bool bIsHuman = isHuman();
 	// WTP, ray, Barracks System, check if there is still enough Barracks Space - START
 	// Comment: I am afraid to damage AI logc thus I will only check this for Human
 	if (GLOBAL_DEFINE_ENABLE_NEW_BARRACKS_SYSTEM && isHuman())
@@ -5497,7 +5508,7 @@ bool CvUnit::canUnload() const
 
 void CvUnit::unload()
 {
-	if (!canUnload())
+	if ( false == canUnload())
 	{
 		return;
 	}
@@ -5508,7 +5519,7 @@ void CvUnit::unload()
 // returns true if the unit is still alive
 void CvUnit::unloadStoredAmount(int iAmount)
 {
-	if (!canUnload())
+	if (false == canUnload())
 	{
 		return;
 	}
@@ -5526,6 +5537,8 @@ void CvUnit::unloadStoredAmount(int iAmount)
 
 void CvUnit::doUnloadYield(int iAmount)
 {
+	//TODO: 2024-12-25 - JHA - Remove after bug has been fixed
+	bool bIsHuman = isHuman();
 	YieldTypes eYield = getYield();
 	FAssert(eYield != NO_YIELD);
 	if (eYield == NO_YIELD)
@@ -5558,7 +5571,6 @@ void CvUnit::doUnloadYield(int iAmount)
 	if (pCity != NULL)
 	{
 		// R&R mod, vetiarvind, max yield import limit - start (bug fix of native code)
-		//pCity->changeYieldStored(eYield, pUnloadingUnit->getYieldStored());
 		pCity->changeYieldStored(eYield, iAmount);
 		// R&R mod, vetiarvind, max yield import limit - end
 		pCity->AI_changeTradeBalance(eYield, iAmount);
@@ -10229,7 +10241,6 @@ int CvUnit::cargoSpaceAvailable(SpecialUnitTypes eSpecialCargo, DomainTypes eDom
 	if (specialCargo() != NO_SPECIALUNIT)
 	{
 		// WTP, ray, Construction Supplies - START
-		//if (specialCargo() != eSpecialCargo)
 		if (specialCargo() != eSpecialCargo && eDomainCargo != DOMAIN_IMMOBILE)
 		{
 			return 0;
@@ -10239,7 +10250,6 @@ int CvUnit::cargoSpaceAvailable(SpecialUnitTypes eSpecialCargo, DomainTypes eDom
 	if (domainCargo() != NO_DOMAIN)
 	{
 		// WTP, ray, Construction Supplies - START
-		//if (domainCargo() != eDomainCargo)
 		if (domainCargo() != eDomainCargo && eDomainCargo != DOMAIN_IMMOBILE)
 		{
 			return 0;
@@ -13088,7 +13098,6 @@ bool CvUnit::setTransportUnit(CvUnit* pTransportUnit, bool bUnload)
 		{
 			// PatchMod: Berth Size START
 		    pOldTransportUnit->changeCargo(-iCargoSize);
-			//pOldTransportUnit->changeCargo(-1);
 			// PatchMod: Berth Size END
 		}
 		m_transportUnit.reset();
@@ -13100,43 +13109,45 @@ bool CvUnit::setTransportUnit(CvUnit* pTransportUnit, bool bUnload)
 			setUnitTravelState(pTransportUnit->getUnitTravelState(), false);
 
 			//check if combining cargo
+			CvPlot* pPlot = pTransportUnit->plot();
 			YieldTypes eYield = getYield();
-			if (eYield != NO_YIELD)
+			if (eYield != NO_YIELD && pPlot != NULL)
 			{
-				CvPlot* pPlot = pTransportUnit->plot();
-				if (pPlot != NULL)
+				for (int i = 0; i < pPlot->getNumUnits(); i++)
 				{
-					for (int i = 0; i < pPlot->getNumUnits(); i++)
+					CvUnit* pLoopUnit = pPlot->getUnitByIndex(i);
+					if (pLoopUnit == NULL)
 					{
-						CvUnit* pLoopUnit = pPlot->getUnitByIndex(i);
-						if(pLoopUnit != NULL)
-						{
-							if (pLoopUnit->getTransportUnit() == pTransportUnit)
-							{
-								if (pLoopUnit->getYield() == eYield)
-								{
-									//merge yields
-									int iTotalYields = pLoopUnit->getYieldStored() + getYieldStored();
-									int iYield1 = std::min(iTotalYields, GC.getGameINLINE().getCargoYieldCapacity());
-									int iYield2 = iTotalYields - iYield1;
-									pLoopUnit->setYieldStored(iYield1);
-									setYieldStored(iYield2);
+						continue;
+					}
 
-									//all yields have been transferred to another unit
-									if (getYieldStored() == 0)
-									{
-										kill(true);
-										return false;
-									}
+					if (pLoopUnit->getTransportUnit() != pTransportUnit)
+					{
+						continue;
+					}
+					
+					if (pLoopUnit->getYield() != eYield)
+					{
+						continue;
+					}
+						//merge yields
+					int iTotalYields = pLoopUnit->getYieldStored() + getYieldStored();
+					int iYield1 = std::min(iTotalYields, GC.getGameINLINE().getCargoYieldCapacity());
+					int iYield2 = iTotalYields - iYield1;
+					pLoopUnit->setYieldStored(iYield1);
+					setYieldStored(iYield2);
 
-									//check if load anymore of this cargo
-									if (pTransportUnit->getLoadYieldAmount(eYield) == 0)
-									{
-										return true;
-									}
-								}
-							}
-						}
+					//all yields have been transferred to another unit
+					if (getYieldStored() == 0)
+					{
+						kill(true);
+						return false;
+					}
+
+					//check if load anymore of this cargo
+					if (pTransportUnit->getYieldAmount(eYield) == 0)
+					{
+						return true;
 					}
 				}
 			}
@@ -13155,7 +13166,6 @@ bool CvUnit::setTransportUnit(CvUnit* pTransportUnit, bool bUnload)
 
 			// PatchMod: Berth Size START
             pTransportUnit->changeCargo(iCargoSize);
-			//pTransportUnit->changeCargo(1);
 			// PatchMod: Berth Size END
 			pTransportUnit->getGroup()->setActivityType(ACTIVITY_AWAKE);
 		}
@@ -14565,87 +14575,103 @@ bool CvUnit::verifyStackValid()
 void CvUnit::setYieldStored(int iYieldAmount)
 {
 	int iChange = (iYieldAmount - getYieldStored());
-	if (iChange != 0)
+	if (iChange == 0)
 	{
-		OOS_LOG_3("set yield stored", getTypeStr(getUnitType()), iChange);
-		FAssert(iYieldAmount >= 0);
-		m_iYieldStored = iYieldAmount;
+		return;
+	}
 
+	//TODO: 2024-12-25 - JHA - Remove after bug has been fixed
+	bool bIsHuman = isHuman();
 
-		YieldTypes eYield = getYield();
-		if (eYield != NO_YIELD)
+	OOS_LOG_3("set yield stored", getTypeStr(getUnitType()), iChange);
+	FAssert(iYieldAmount >= 0);
+	m_iYieldStored = iYieldAmount;
+
+	YieldTypes eYield = getYield();
+	if (eYield != NO_YIELD)
+	{
+		GET_PLAYER(getOwnerINLINE()).changePower(iChange * GC.getYieldInfo(eYield).getPowerValue());
+		GET_PLAYER(getOwnerINLINE()).changeAssets(iChange * GC.getYieldInfo(eYield).getAssetValue());
+		CvArea* pArea = area();
+		//FAssertMsg(pArea, "No area assigned");
+		if (pArea != NULL)
 		{
-			GET_PLAYER(getOwnerINLINE()).changePower(iChange * GC.getYieldInfo(eYield).getPowerValue());
-			GET_PLAYER(getOwnerINLINE()).changeAssets(iChange * GC.getYieldInfo(eYield).getAssetValue());
-			CvArea* pArea = area();
-			//FAssertMsg(pArea, "No area assigned");
-			if (pArea != NULL)
-			{
-				pArea->changePower(getOwnerINLINE(), iChange * GC.getYieldInfo(eYield).getPowerValue());
-			}
-			if (getYieldStored() == 0)
-			{
-				kill(true);
-			}
+			pArea->changePower(getOwnerINLINE(), iChange * GC.getYieldInfo(eYield).getPowerValue());
 		}
-		else
+		if (getYieldStored() == 0)
 		{
-			if (!m_pUnitInfo->isTreasure() && getYieldStored() > 0)
-			{
-				CvPlayer& kPlayer = GET_PLAYER(getOwnerINLINE());
-				CvCity* pCity = kPlayer.getPopulationUnitCity(getID());
-				if (pCity != NULL)
-				{
-					if (getYieldStored() >= pCity->educationThreshold())
-					{
-						if (isHuman())
-						{
-							// Teacher List - start - Nightinggale
-							CvPlayer& kPlayer = GET_PLAYER(GC.getGameINLINE().getActivePlayer());
-							std::vector<UnitTypes> ordered_units;
-							// make a list of ordered units, where the owner can affort training them.
-							for (int iI = 0; iI < GC.getNumUnitInfos(); iI++)
-							{
-								int iPrice = pCity->getSpecialistTuition((UnitTypes) iI);
-								if (iPrice >= 0 && iPrice <= kPlayer.getGold())
-								{
-									UnitTypes eUnitType = (UnitTypes) iI;
-									for(int count = 0; count <	pCity->getOrderedStudents(eUnitType); count++)
-									{
-										// add one for each unit ordered, not just one for each type as a random one is selected in the end.
-										ordered_units.push_back(eUnitType);
-									}
-								}
-							}
+			kill(true);
+		}
+	}
+	else
+	{
+		if (true == m_pUnitInfo->isTreasure())
+		{
+			return;
+		}
 
-							if (!ordered_units.empty())
-							{
-								// Train the unit into
-								int random_num = ordered_units.size();
-								if (random_num == 1)
-								{
-									// The vector contains only one unit. The "random" unit has to be the first.
-									random_num = 0;
-								} else {
-									random_num = GC.getGameINLINE().getSorenRandNum(random_num, "Pick unit for training");
-								}
-								pCity->educateStudent(this->getID(), ordered_units[random_num]);
-							}
-							else
-							{
-								// no ordered units can be trained
-								// original code to open the popup to pick a unit
-								CvPopupInfo* pPopupInfo = new CvPopupInfo(BUTTONPOPUP_CHOOSE_EDUCATION, pCity->getID(), getID());
-								gDLL->getInterfaceIFace()->addPopup(pPopupInfo, getOwnerINLINE());
-							}
-							// Teacher List - end - Nightinggale
-						}
-						else
+		if (getYieldStored() <= 0)
+		{
+			return;
+		}
+
+		CvPlayer& kPlayer = GET_PLAYER(getOwnerINLINE());
+		CvCity* pCity = kPlayer.getPopulationUnitCity(getID());
+		if (pCity == NULL)
+		{
+			return;
+		}
+
+//QUESTION: 2024-12-27 - JHA - What has education to do with this function?
+		if (getYieldStored() >= pCity->educationThreshold())
+		{
+			if (isHuman())
+			{
+				// Teacher List - start - Nightinggale
+				CvPlayer& kPlayer = GET_PLAYER(GC.getGameINLINE().getActivePlayer());
+				std::vector<UnitTypes> ordered_units;
+				// make a list of ordered units, where the owner can affort training them.
+				for (int iI = 0; iI < GC.getNumUnitInfos(); iI++)
+				{
+					int iPrice = pCity->getSpecialistTuition((UnitTypes) iI);
+					if (iPrice >= 0 && iPrice <= kPlayer.getGold())
+					{
+						UnitTypes eUnitType = (UnitTypes) iI;
+						for(int count = 0; count <	pCity->getOrderedStudents(eUnitType); count++)
 						{
-							pCity->AI_educateStudent(getID());
+							// add one for each unit ordered, not just one for each type as a random one is selected in the end.
+							ordered_units.push_back(eUnitType);
 						}
 					}
 				}
+
+				if (!ordered_units.empty())
+				{
+					// Train the unit into
+					int random_num = ordered_units.size();
+					if (random_num == 1)
+					{
+						// The vector contains only one unit. The "random" unit has to be the first.
+						random_num = 0;
+					} 
+					else 
+					{
+						random_num = GC.getGameINLINE().getSorenRandNum(random_num, "Pick unit for training");
+					}
+					pCity->educateStudent(this->getID(), ordered_units[random_num]);
+				}
+				else
+				{
+					// no ordered units can be trained
+					// original code to open the popup to pick a unit
+					CvPopupInfo* pPopupInfo = new CvPopupInfo(BUTTONPOPUP_CHOOSE_EDUCATION, pCity->getID(), getID());
+					gDLL->getInterfaceIFace()->addPopup(pPopupInfo, getOwnerINLINE());
+				}
+				// Teacher List - end - Nightinggale
+			}
+			else
+			{
+				pCity->AI_educateStudent(getID());
 			}
 		}
 	}
@@ -16247,7 +16273,7 @@ bool CvUnit::gatherResource()
 						{
 							int iYieldStored = pLoopUnit->getYieldStored();
 							int iCargoCapacity = GC.getGameINLINE().getCargoYieldCapacity();
-							int iLoadedAmount = pLoopUnit->getLoadedYieldAmount(eYield);
+							int iLoadedAmount = pLoopUnit->getYieldAmountAllUnitsOnPlot(eYield);
 
 							// R&R, ray, High Sea Fishing - START
 							int iGatherAmount = eBonusYieldChanges[(int)eYield];

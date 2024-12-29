@@ -1,13 +1,9 @@
 #pragma once
 
-// unit.h
-
 #ifndef CIV4_UNIT_H
 #define CIV4_UNIT_H
 
 #include "CvDLLEntity.h"
-//#include "CvEnums.h"
-//#include "CvStructs.h"
 
 #pragma warning( disable: 4251 )		// needs to have dll-interface to be used by clients of class
 
@@ -151,18 +147,16 @@ public:
 	void gift(bool bTestTransport = true);
 	bool canLoadUnit(const CvUnit* pTransport, const CvPlot* pPlot, bool bCheckCity) const;
 	void loadUnit(CvUnit* pTransport);
-	bool canLoad(const CvPlot* pPlot, bool bCheckCity) const;
+	bool canLoadAnyUnit(const CvPlot* pPlot, bool bCheckCity) const;
 	bool load(bool bCheckCity);
 	bool shouldLoadOnMove(const CvPlot* pPlot) const;
 
-	int getLoadedYieldAmount(YieldTypes eYield) const;
-	int getLoadYieldAmount(YieldTypes eYield) const;
+	int getYieldAmountAllUnitsOnPlot(YieldTypes eYield) const;
+	int getYieldAmount(YieldTypes eYield) const;
 	bool canLoadYields(const CvPlot* pPlot, bool bTrade) const;
 	bool canLoadYield(const CvPlot* pPlot, YieldTypes eYield, bool bTrade) const;
 	//R&R mod, vetiarvind, max yield import limit - start
-	//void loadYield(YieldTypes eYield, bool bTrade);
-	//void loadYieldAmount(YieldTypes eYield, int iAmount, bool bTrade);
-	int loadYield(YieldTypes eYield, bool bTrade);
+	int loadYieldAmountMax(YieldTypes eYield, bool bTrade);
 	int loadYieldAmount(YieldTypes eYield, int iAmount, bool bTrade);
 	//R&R mod, vetiarvind, max yield import limit - end
 	int getMaxLoadYieldAmount(YieldTypes eYield) const;
@@ -842,8 +836,6 @@ protected:
 	int m_iID;
 	int m_iGroupID;
 	int m_iHotKeyNumber;
-	// int m_iX;
-	// int m_iY;
 	Coordinates m_coord;
 	int m_iLastMoveTurn;
 	int m_iGameTurnCreated;
@@ -993,9 +985,6 @@ protected:
 	YieldTypes m_eCachedYield;
 // unit yield cache - end - Nightinggale
 	int getCargoValue(Port port) const;
-	// WTP, ray, prevent Coastal Ships to Display EUROPE, AFRICA and Port Royal in GO-TO - START
-	//int canCrossCoastOnly() const;
-	// WTP, ray, prevent Coastal Ships to Display EUROPE, AFRICA and Port Royal in GO-TO - END
 
 	EnumMap<PromotionTypes, bool> m_embisPromotionApplied;
 

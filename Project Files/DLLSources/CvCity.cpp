@@ -11750,6 +11750,11 @@ bool CvCity::canTradeAway(PlayerTypes eToPlayer) const
 	return true;
 }
 
+bool CvCity::getStockOverflow() const 
+{ 
+	return getTotalYieldStored() >= getMaxYieldCapacity(); 
+}
+
 bool CvCity::educateStudent(int iUnitId, UnitTypes eUnit)
 {
 
@@ -12310,6 +12315,7 @@ int CvCity::getImportsLimit(YieldTypes eYield) const
 }
 
 // Returns the max number of yield units that the city is willing to accept
+//TODO: 2024-12-22 - JHA - Returning negativ value is not good. Should be mapped to 0!
 int CvCity::getMaxImportAmount(YieldTypes eYield) const
 {
 	// automated transports will ignore import settings if loaded with something no city imports.
@@ -12318,12 +12324,19 @@ int CvCity::getMaxImportAmount(YieldTypes eYield) const
 	//    Nightinggale
 	//FAssert(isImport(eYield));
 
+	//INFO: 2024-12-25 - JHA - If the warehouse in the city is overflowing, a negative capacity is generated!
+	int iRemainingCapacity = getMaxYieldCapacity() - getTotalYieldStored();
+	if (iRemainingCapacity < 0)
+	{
+		return 0;
+	}
+
 	const int iImportLimit = m_em_iTradeMaxThreshold.get(eYield);
 
 	if (iImportLimit == 0)
 	{
 		// The city has not set a limit for this yield, return the amount of remaining storage
-		return  getMaxYieldCapacity() - getTotalYieldStored();
+		return iRemainingCapacity;
 	}
 	else
 	{

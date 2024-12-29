@@ -855,6 +855,8 @@ void CvSelectionGroupAI::processTradeRoute(CvTradeRoute* pRoute, std::map<IDInfo
 bool CvSelectionGroupAI::AI_tradeRoutes()
 {
 	PROFILE_FUNC();
+//TODO: 2024-12-25 - JHA - Remove after bug has been fixed
+	bool bIsHuman = isHuman();
 
 	const IDInfo kEurope(getOwnerINLINE(), CvTradeRoute::EUROPE_CITY_ID);
 
@@ -1236,7 +1238,7 @@ bool CvSelectionGroupAI::AI_tradeRoutes()
 		//For example a city might have "101" of an item, we want to move the first 100 but not the 1.
 		//But it could also have 200, in which case we might want 2 loads of 100...
 		//But it could also have 200 of two resources, and we'd want to move 100 of each...
-		while (!isFull())
+		while ( false == isFull())
 		{
 			int iBestRoute = -1;
 			int iBestRouteValue = 0;
@@ -1251,10 +1253,15 @@ bool CvSelectionGroupAI::AI_tradeRoutes()
 				// Erik: This is redundant. Instead of looping through all routes, just find the subset of routes to the best destination city
 
 				CvCity* pSourceCity = ::getCity(routes[i]->getSourceCity());
-				if ((pSourceCity != NULL && pSourceCity == pPlotCity) // R&R mod, vetiarvind, max yield import limit (move plot==srcCity check outside as optmztn)
-					&& (routes[i]->getDestinationCity() == kBestDestination))
+				// R&R mod, vetiarvind, max yield import limit (move plot==srcCity check outside as optmztn)
+				if ((pSourceCity != NULL && pSourceCity == pPlotCity) && (routes[i]->getDestinationCity() == kBestDestination))
 				{
 					CvCity* pDestinationCity = ::getCity(routes[i]->getDestinationCity());
+					if (NULL == pDestinationCity)
+					{
+						continue;
+					}
+
 					YieldTypes eYield = routes[i]->getYield();
 
 					// transport feeder - start - Nightinggale
@@ -1263,12 +1270,11 @@ bool CvSelectionGroupAI::AI_tradeRoutes()
 
 
 					// R&R mod, vetiarvind, max yield import limit - start
-					int iOriginalAmount = iAmount;
-					int bDestinationHasImportLimit = pDestinationCity != NULL && pDestinationCity->getMaxImportAmount(eYield) > 0;
+					bool bDestinationHasImportLimit = pDestinationCity->getImportsLimit(eYield) > 0;
 					if(bDestinationHasImportLimit)
 					{
 						int turnsToReach = 0;
-						iOriginalAmount = iAmount = std::min(GC.getGameINLINE().getCargoYieldCapacity(), iAmount);
+						iAmount = std::min(GC.getGameINLINE().getCargoYieldCapacity(), iAmount);
 						const bool r1 = generatePath(pSourceCity->plot(), pDestinationCity->plot(), (bIgnoreDanger ? MOVE_IGNORE_DANGER : MOVE_NO_ENEMY_TERRITORY), true, &turnsToReach);
 						FAssertMsg(r1, "Path must be valid!");
 						// Erik: If the destination can be reached in the same turn, subtract a turn
@@ -1315,7 +1321,7 @@ bool CvSelectionGroupAI::AI_tradeRoutes()
 							}
 							else
 							{
-								loaded = pLoopUnit->loadYield(routes[iBestRoute]->getYield(), false);
+								loaded = pLoopUnit->loadYieldAmountMax(routes[iBestRoute]->getYield(), false);
 							}
 
 							// R&R mod, vetiarvind, max yield import limit - end
@@ -1485,6 +1491,13 @@ int CvSelectionGroupAI::estimateYieldsToLoad(CvCity* pDestinationCity, int maxYi
 	{
 		return 0; // R&R mod, vetiarvind, max yield import limit fix
 	}
+
+//TODO: 2024-12-28 - JHA - Notify player that not all yields could be unloaded!
+	if ( true == pDestinationCity->getStockOverflow() )
+	{
+		return 0;
+	}
+
 	int yieldsToLoad = maxYieldsToLoad;
 
 	int importLimit = pDestinationCity->getMaxImportAmount(eYield);
@@ -1501,12 +1514,48 @@ int CvSelectionGroupAI::estimateYieldsToLoad(CvCity* pDestinationCity, int maxYi
 //TODO: 2024-12-23 - JHA - Implement fall-back if not all yields are unloaded
 bool CvSelectionGroupAI::unloadToCity(CvCity* pCity, CvUnit* unit)
 {
-	unit->unloadStoredAmount(pCity->getMaxImportAmount(unit->getYield()));
-
-	if (unit->getYieldStored() > 0)
+	if (true == isHuman())
 	{
-		FAssert(unit->getYieldStored() > 0);
-		return false;
+		YieldTypes yield = unit->getYield();
+		unit->unloadStoredAmount(pCity->getMaxImportAmount(unit->getYield()));
+
+		if (unit->getYieldStored() > 0)
+		{
+			FAssert(unit->getYieldStored() > 0);
+			return false;
+		}
+
+		return true;
+	}
+	else
+	{
+		return unloadToCityOld(pCity, unit);
+	}
+
+}
+
+bool CvSelectionGroupAI::unloadToCityOld(CvCity* pCity, CvUnit* unit)
+{
+	if (pCity->getMaxImportAmount(unit->getYield()) > 0)
+	{
+		int totalStored = unit->getYieldStored();
+		int toUnload = estimateYieldsToLoad(pCity, totalStored, unit->getYield(), 0, 0);
+		if (toUnload <= 0)
+		{
+			return true;
+		}
+		if (toUnload < totalStored)
+		{
+			unit->unloadStoredAmount(toUnload);
+		}
+		else
+		{
+			unit->unload();
+		}
+	}
+	else
+	{
+		unit->unload();
 	}
 
 	return true;

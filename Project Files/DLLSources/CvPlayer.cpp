@@ -16521,7 +16521,7 @@ CvUnit* CvPlayer::buyYieldUnit(YieldTypes eYield, int iAmount, CvUnit* pTranspor
 		return NULL;
 	}
 
-	int iAmountAvailable = pTransport->getLoadYieldAmount(eYield);
+	int iAmountAvailable = pTransport->getYieldAmount(eYield);
 	iAmount = std::min(iAmount, iAmountAvailable);
 	if (iAmount == 0) {
 		FAssertMsg(false, "Can't load cargo yield.");
@@ -18737,7 +18737,7 @@ int CvPlayer::getTradeYieldAmount(YieldTypes eYield, CvUnit* pTransport) const
 		}
 
 		int iCityAmount = pCity->getYieldStored(eYield);
-		int iAmountAvailable = pTransport->getLoadYieldAmount(eYield);
+		int iAmountAvailable = pTransport->getYieldAmount(eYield);
 		iAmount = std::min(iCityAmount, iAmountAvailable);
 	}
 

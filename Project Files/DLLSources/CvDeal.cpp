@@ -534,7 +534,7 @@ bool CvDeal::startTrade(TradeData trade, PlayerTypes eFromPlayer, PlayerTypes eT
 					if(pCity->getOwnerINLINE() == eFromPlayer)
 					{
 						iAmount = pTransport->getMaxLoadYieldAmount(eYield);
-						pTransport->loadYield(eYield, true);
+						pTransport->loadYieldAmountMax(eYield, true);
 					}
 					else //unload yields from transport into city
 					{

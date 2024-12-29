@@ -6405,6 +6405,7 @@ CvCity* CvPlot::getWorkingCity() const
 	CvCity* pCity = getCity(m_workingCity);
 	FAssertMsg(SAVEGAME_IS_LOADING || pCity == NULL || pCity->coord().distance(coord()) <= CITY_PLOTS_RADIUS, "Plot has a working city, which is out of range");
 	FAssertMsg(SAVEGAME_IS_LOADING || pCity != NULL || m_workingCity.iID == -1, "Plot has m_workingCity with a city ID, which doesn't exist");
+//FIXME: 2024-12-24 - JHA - Occurs when razing a city. (Human conquers AI city)
 	return pCity;
 }
 
